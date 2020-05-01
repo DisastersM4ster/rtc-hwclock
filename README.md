@@ -11,9 +11,9 @@ tutorials what instructs how to install a RTC on a Raspberry Pi.
 BUT many of these how tos are very old and do not respect nor know about newer
 technologies like device-tree (overlays) or systemd. So many of these
 instructions tell you things like:
-* load kernel module i2c_dev
+* load kernel module `i2c_dev`
 * load kernel module for your RTC module (chip)
-* echo a "magic number" into /sys/class/i2c-adapter/i2c-1/new_device file
+* echo a "magic number" into `/sys/class/i2c-adapter/i2c-1/new_device` file
 
 This repo collects together anything you need to install an RTC module on a SOC
 computer and use modern technologies like systemd and device-tree overlays.
@@ -31,11 +31,11 @@ Before you start, you must activate the i2c interface in the Linux kernel.
 The on-the-fly way to load i2c interface into Linux kernel is modprobe:
 `modprobe i2c_dev` (as root or with sudo).    
 This do not work with reboots. After a reboot the kernel do not loaded the
-i2c_dev module.
+`i2c_dev` module.
 
 ### While system boot
 #### Raspberry Pi
-You can use a line in file /boot/config.txt to load the i2c_dev module if you
+You can use a line in file `/boot/config.txt` to load the `i2c_dev` module if you
 are using a Raspberry Pi.    
 Write or uncomment this line into the file `/boot/config.txt`:
 ```
@@ -45,7 +45,7 @@ dtparam=i2c_arm=on
 #### Working always
 On any non-Raspberry Pi system you can load kernel modules during boot time if
 the are written into `/etc/modules`.     
-Add the module name i2c_dev into file `/etc/module`:
+Add the module name `i2c_dev` into file `/etc/module`:
 ```
 i2c_dev
 ```
@@ -125,3 +125,26 @@ BUT: You musst write that magic string into
 `/sys/class/i2c-adapter/i2c-1/new_device` at every boot. So you must install a
 small script what do that at every boot and place that script at an early place
 in your init system.
+
+### The device-tree way
+With becoming popular of the small SoC devices without onboard RTC clocks many
+people installed these cheap and easy to get RTC modules to their SoC boards.   
+And now the device-tree comes in. Instead modprobing modules and writing magic
+numbers into a file, you can compile a device-tree overlay what contains all
+these informations.    
+All you have to do with an device-tree overlay is:
+* write the dtoverlay name and address into `/boot/config.txt`
+* load the module
+
+All done. No scripts, no need to check availability of
+`/sys/class/i2c-adapter/i2c-1/new_device` and so on.    
+And the best: for many RTC devices dtoverlays are already precompiled.
+
+
+# Howto compile a device-tree overlay?
+
+Before you start to compile a `*.dto` file, check if you really need that.
+In Raspbian many RTC and tiny RTC modules are already available in
+`/boot/overlays/i2c-rtc.dtbo`. Please firstly refere `/boot/overlays/README`.
+You only have to compile your device into a dtbo file if you cannot find your
+RTC module.
