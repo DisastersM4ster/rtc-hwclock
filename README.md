@@ -143,8 +143,67 @@ And the best: for many RTC devices dtoverlays are already precompiled.
 
 # Howto compile a device-tree overlay?
 
-Before you start to compile a `*.dto` file, check if you really need that.
+Before you start to compile a `\*.dto` file, check if you really need that.
 In Raspbian many RTC and tiny RTC modules are already available in
 `/boot/overlays/i2c-rtc.dtbo`. Please firstly refere `/boot/overlays/README`.
 You only have to compile your device into a dtbo file if you cannot find your
 RTC module.
+
+## Decompile an existing dtbo file
+
+If you are using raspberry, you can use existing i2c-rtc.dtbo file as template.
+You only need to add your device to that file.
+
+Decompiling the dt blob file, is as simple as compiling it back into dtbo. All
+you need is the tool `dtc`. It is part of package `device-tree-compiler`. You
+have to install package device-tree-compiler.
+
+To decompile the existing device-tree blob use command:
+```
+root@raspbian:~# dtc -I dtb -O dts -o i2c-rtc.dts /boot/overlays/i2c-rtc.dtbo
+root@raspbian:~#
+```
+
+Now you have a device tree source file in your current dir. You can add your 
+device at the end of the device list. I recommend to simply copy an existing
+device what is very similar to yours, put the section to the end and change the
+fields what are different to yours, for example `addr` and `compatible`.   
+
+### Find out the compatible
+
+The `compatible` and `addr` fields are the most important in device tree files.
+
+Field compatible is the information what finds the right kernel module. So it
+must be identic to what is in your kernel module. You find out with modinfo:
+```
+root@fhembot:~# modinfo rtc_pcf85063
+filename:       /lib/modules/4.19.97-v7l+/extra/rtc-pcf85063.ko
+license:        GPL
+description:    PCF85063 RTC driver
+author:         Søren Andersen <san@rosetechnology.dk>
+srcversion:     B342E6452E3231601285DC6
+alias:          i2c:pcf85063
+alias:          of:N*T*Cnxp,pcf85063C*
+alias:          of:N*T*Cnxp,pcf85063
+depends:        
+name:           rtc_pcf85063
+vermagic:       4.19.97-v7l+ SMP mod_unload modversions ARMv7 p2v8 
+root@fhembot:~#
+```
+
+The alias lines with `alias:          of:N*T*Cnxp,pcf85063` are the information
+we need. The `nxp,pcf85063` string is what must be written in
+`comptabile = "module_alias";` line.   
+
+Now we have all informations to write a device-tree file.
+
+
+## Write device-tree source file and compile it
+
+You should know:
+* how to decompiled device-tree blob file (from `/boot/overlays/i2c-rtc.dtbo`)
+* what are compatible information from aliases in kernel module
+* what is register address register on i2c bus
+
+compiling device tree blob:
+`dtc -I dts -o new-i2c-rtc.dtbo edited-i2c-rtc.dts`
